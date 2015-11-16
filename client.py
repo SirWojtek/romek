@@ -5,6 +5,6 @@ bus = dbus.SessionBus()
 
 obj = bus.get_object('org.romek.service', '/org/romek/service')
 
-reply = obj.hello_world(dbus_interface = 'org.romek.interface')
+print obj.add_schedule_task(('MO', (12,0), 'MO', (13,0), 13), dbus_interface = 'org.romek.interface')
 
-print reply
+print obj.list_schedule_task(dbus_interface = 'org.romek.interface')

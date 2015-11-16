@@ -1,27 +1,15 @@
-#!/bin/python2
-import dbus
-from dbus.mainloop.glib import DBusGMainLoop
 import dbus.service
-import gobject
-
-dbus_loop = DBusGMainLoop(set_as_default = True)
 
 class RomekServer(dbus.service.Object):
-    def __init__(self, bus, object_path):
-        dbus.service.Object.__init__(self, bus, object_path)
+    service_name = 'org.romek.service'
+    service_object = '/org/romek/service'
+    interface_name = 'org.romek.interface'
 
-    @dbus.service.method(dbus_interface = 'org.romek.interface',
+    def __init__(self, bus):
+        self._bus_name = dbus.service.BusName(self.service_name, bus)
+        dbus.service.Object.__init__(self, bus, self.service_object)
+
+    @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 's')
     def hello_world(self):
         return 'Hello World!'
-
-def main():
-    bus = dbus.SessionBus(mainloop = dbus_loop)
-    name = dbus.service.BusName("org.romek.service", bus)
-    romek = RomekServer(bus, '/org/romek/service')
-
-    gobject.MainLoop().run()
-
-
-if __name__ == '__main__':
-    main()

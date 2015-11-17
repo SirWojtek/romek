@@ -49,5 +49,10 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.update_schedule_task((self.task1, self.task3), dbus_interface = self.interface))
         self.assertListEqual(self.obj.list_schedule_task(), [ self.task3, self.task2 ])
 
+    def test_set_and_get_temperature(self):
+        temp = 23
+        self.assertTrue(self.obj.set_temperature(23, dbus_interface = self.interface))
+        self.assertEqual(self.obj.get_temperature(dbus_interface = self.interface))
+
 if __name__ == '__main__':
     unittest.main()

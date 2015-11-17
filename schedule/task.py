@@ -11,3 +11,11 @@ class Task:
     def raw(self):
         return ( self.start_day, (self.start_time.hour, self.start_time.minute),
             self.end_day, (self.end_time.hour, self.end_time.minute), self.status)
+
+    def __eq__(self, other):
+        return (isinstance(other, self.__class__)
+            and self.start_day == other.start_day and self.start_time == other.start_time
+            and self.end_day == other.end_day and self.end_time == self.end_time)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)

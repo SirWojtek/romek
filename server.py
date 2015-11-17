@@ -1,5 +1,6 @@
 import dbus.service
 from schedule.scheduler import Scheduler
+from settings.current_settings import CurrentSettings
 from functools import partial
 
 def safe_schedule_call(method):
@@ -23,6 +24,7 @@ class RomekServer(dbus.service.Object):
     def __init__(self, bus):
         self._bus_name = dbus.service.BusName(self.service_name, bus)
         self._scheduler = Scheduler()
+        self._current_settings = CurrentSettings()
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     @dbus.service.method(dbus_interface = interface_name,
@@ -49,3 +51,14 @@ class RomekServer(dbus.service.Object):
         in_signature = '', out_signature = task_list_signature)    
     def list_schedule_task(self):
         return self._scheduler.list_tasks()
+
+    @dbus.service.method(dbus_interface = interface_name,
+        in_signature = 'u', out_signature = 'b')
+    def set_temperature(self, temperature):
+        self._current_settings.update_temperature(temperature)
+        return True
+
+    @dbus.service.method(dbus_interface = interface_name,
+        in_signature = '', out_signature = 'u')
+    def get_temperature(self):
+        return self._current_settings.temperature

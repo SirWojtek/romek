@@ -54,5 +54,12 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.set_temperature(23, dbus_interface = self.interface))
         self.assertEqual(self.obj.get_temperature(dbus_interface = self.interface), temp)
 
+    def test_set_temperature_and_get_manual_mode(self):
+        temp = 23
+        self.assertFalse(self.obj.get_manual_mode(dbus_interface = self.interface))
+        self.assertTrue(self.obj.set_temperature(23, dbus_interface = self.interface))
+        self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
+
+
 if __name__ == '__main__':
     unittest.main()

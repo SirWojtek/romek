@@ -24,7 +24,7 @@ class TestServerSchedule(unittest.TestCase):
         self.interface = 'org.romek.interface'
         self.obj = init_object(self.bus)
 
-        self.task1 = ('MO', (12, 0), 'MO', (13, 0), 13)
+        self.task1 = ('M', (12, 0), 'M', (13, 0), 13)
         self.task2 = ('F', (14, 30), 'SA', (6, 15), 21)
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
 

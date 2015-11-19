@@ -1,6 +1,7 @@
 import dbus.service
 from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
+from serial_port.serial_port_manager import SerialPortManager
 from functools import partial
 
 def safe_schedule_call(method):
@@ -23,8 +24,9 @@ class RomekServer(dbus.service.Object):
 
     def __init__(self, bus):
         self._bus_name = dbus.service.BusName(self.service_name, bus)
-        self._scheduler = Scheduler()
         self._current_settings = CurrentSettings()
+        self._scheduler = Scheduler(self._current_settings)
+        self._serial_port_manager = SerialPortManager(self._current_settings)
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     @dbus.service.method(dbus_interface = interface_name,

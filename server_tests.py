@@ -8,7 +8,7 @@ server = None
 
 def init_object(bus):
     iterations = 10
-    sleep_time = 0.01
+    sleep_time = 0.05
     for i in range(iterations):
         try:
             return bus.get_object('org.romek.service', '/org/romek/service')

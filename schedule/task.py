@@ -12,9 +12,9 @@ days_map = {
     'SU' : 6 }
 
 class Task:
-    def __init__(self, task, start_function, end_function):
+    def __init__(self, task, updater):
         self._init_task_data(task)
-        self._init_scheduler(start_function, end_function)
+        self._init_scheduler(updater)
 
     def _init_task_data(self, task):
         self.start_day = task[0]
@@ -23,13 +23,14 @@ class Task:
         self.end_time = time(hour = task[3][0], minute = task[3][1])
         self.status = task[4]
 
-    def _init_scheduler(self, start_function, end_function):
+    def _init_scheduler(self, updater):
+        self._updater = updater
         self.scheduler = BackgroundScheduler()
-        self.scheduler.add_job(partial(start_function, self.status), 'cron',
+        self.scheduler.add_job(partial(updater.start_function, self.status), 'cron',
             day_of_week = days_map[self.start_day],
             hour = self.start_time.hour,
             minute = self.start_time.minute)
-        self.scheduler.add_job(partial(end_function, self.status), 'cron',
+        self.scheduler.add_job(partial(updater.end_function, self.status), 'cron',
             day_of_week = days_map[self.end_day],
             hour = self.end_time.hour,
             minute = self.end_time.minute)

@@ -80,4 +80,4 @@ class RomekServer(dbus.service.Object):
 
     @dbus.service.signal(dbus_interface = interface_name, signature = 'u')
     def temperature_change(self, new_temperature):
-        return new_temperature
+        pass

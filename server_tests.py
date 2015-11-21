@@ -5,7 +5,6 @@ import subprocess
 import threading
 import gobject
 from time import sleep
-from functools import partial
 from dbus.mainloop.glib import DBusGMainLoop
 
 ############# Daemon setup ######################################
@@ -35,12 +34,20 @@ def init_object(bus):
             sleep(sleep_time)
     raise Exception('Could not get server object')
 
-def signal_handler(was_called, sender):
-    was_called.value = True
+class SignalWrapper:
+    _timeout = 0.1
 
-class BoleeanWrapper:
     def __init__(self):
-        self.value = False
+        self.value = None
+        self.event = threading.Event()
+
+    # called from dbus thread
+    def signal_handler(self, received_value):
+        self.value = received_value
+        self.event.set()
+
+    def wait_for_signal(self):
+        self.event.wait(self._timeout)
 
 class TestServerSchedule(unittest.TestCase):
     def setUp(self):
@@ -90,11 +97,12 @@ class TestServerSchedule(unittest.TestCase):
 
     def test_set_temperature_and_get_temperature_change_signal(self):
         temp = 23
-        was_handler_called = BoleeanWrapper()
+        wrapper = SignalWrapper()
 
-        self.obj.connect_to_signal("temperature_change", partial(signal_handler, was_handler_called))
+        self.obj.connect_to_signal("temperature_change", wrapper.signal_handler)
         self.assertTrue(self.obj.set_temperature(temp, dbus_interface = self.interface))
-        self.assertTrue(was_handler_called)
+        wrapper.wait_for_signal()
+        self.assertEqual(wrapper.value, temp)
 
 if __name__ == '__main__':
     unittest.main()

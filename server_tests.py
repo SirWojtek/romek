@@ -4,11 +4,9 @@ import unittest
 import subprocess
 from time import sleep
 
-server = None
-
 def init_object(bus):
     iterations = 10
-    sleep_time = 0.05
+    sleep_time = 0.1
     for i in range(iterations):
         try:
             return bus.get_object('org.romek.service', '/org/romek/service')
@@ -18,8 +16,7 @@ def init_object(bus):
 
 class TestServerSchedule(unittest.TestCase):
     def setUp(self):
-        global server
-        server = subprocess.Popen(['./server_main.py'])
+        self.server = subprocess.Popen(['./server_main.py'])
         self.bus = dbus.SessionBus()
         self.interface = 'org.romek.interface'
         self.obj = init_object(self.bus)
@@ -29,8 +26,8 @@ class TestServerSchedule(unittest.TestCase):
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
 
     def tearDown(self):
-        global server
-        server.kill()
+        self.server.kill()
+        self.server.communicate()
 
     def test_add_multiple_tasks(self):
         self.assertTrue(self.obj.add_schedule_task(self.task1, dbus_interface = self.interface))

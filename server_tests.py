@@ -2,7 +2,27 @@
 import dbus
 import unittest
 import subprocess
+import threading
+import gobject
 from time import sleep
+from dbus.mainloop.glib import DBusGMainLoop
+
+############# Daemon setup ######################################
+
+class DBusMainLoopThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        gobject.MainLoop().run()
+
+gobject.threads_init()
+
+main_loop_thread = DBusMainLoopThread()
+main_loop_thread.setDaemon(True)
+main_loop_thread.start()
+
+#################################################################
 
 def init_object(bus):
     iterations = 10
@@ -17,9 +37,14 @@ def init_object(bus):
 class TestServerSchedule(unittest.TestCase):
     def setUp(self):
         self.server = subprocess.Popen(['./server_main.py'])
-        self.bus = dbus.SessionBus()
+        self.dbus_loop = DBusGMainLoop(set_as_default = True)
+        self.bus = dbus.SessionBus(mainloop = self.dbus_loop)
         self.interface = 'org.romek.interface'
         self.obj = init_object(self.bus)
+
+        self.main_loop_thread = DBusMainLoopThread()
+        self.main_loop_thread.setDaemon(True)
+        self.main_loop_thread.start()
 
         self.task1 = ('M', (12, 0), 'M', (13, 0), 13)
         self.task2 = ('F', (14, 30), 'SA', (6, 15), 21)
@@ -48,14 +73,19 @@ class TestServerSchedule(unittest.TestCase):
 
     def test_set_and_get_temperature(self):
         temp = 23
-        self.assertTrue(self.obj.set_temperature(23, dbus_interface = self.interface))
+        self.assertTrue(self.obj.set_temperature(temp, dbus_interface = self.interface))
         self.assertEqual(self.obj.get_temperature(dbus_interface = self.interface), temp)
 
     def test_set_temperature_and_get_manual_mode(self):
         temp = 23
         self.assertFalse(self.obj.get_manual_mode(dbus_interface = self.interface))
-        self.assertTrue(self.obj.set_temperature(23, dbus_interface = self.interface))
+        self.assertTrue(self.obj.set_temperature(temp, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
+
+    def test_set_temperature_and_get_temperature_change_signal(self):
+        temp = 23
+        self.assertTrue(self.obj.set_temperature(temp, dbus_interface = self.interface))
+
 
 
 if __name__ == '__main__':

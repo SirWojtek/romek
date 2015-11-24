@@ -34,7 +34,7 @@ class RomekServer(dbus.service.Object):
         self._current_settings = CurrentSettings()
         self._current_status = CurrentStatus()
         self._scheduler = Scheduler(self._current_settings)
-        self._serial_port_manager = SerialPortManager(self._current_settings)
+        self._serial_port_manager = SerialPortManager(self._current_settings, self._current_status)
         self._signal_emitter = SignalEmitter(self._current_settings, self._current_status, signal_map)
         dbus.service.Object.__init__(self, bus, self.service_object)
 

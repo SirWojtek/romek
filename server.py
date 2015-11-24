@@ -1,6 +1,7 @@
 import dbus.service
 from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
+from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
 from signals.signal_emitter import SignalEmitter
 from functools import partial
@@ -24,13 +25,17 @@ class RomekServer(dbus.service.Object):
     task_list_signature = 'a%s' % task_tuple_signature
 
     def __init__(self, bus):
-        signal_map = {'temperature_change' : self.temperature_change}
+        signal_map = {
+            'temperature_change' : self.temperature_change,
+            'temperature_status' : self.temperature_status
+        }
 
         self._bus_name = dbus.service.BusName(self.service_name, bus)
         self._current_settings = CurrentSettings()
+        self._current_status = CurrentStatus()
         self._scheduler = Scheduler(self._current_settings)
         self._serial_port_manager = SerialPortManager(self._current_settings)
-        self._signal_emitter = SignalEmitter(self._current_settings, signal_map)
+        self._signal_emitter = SignalEmitter(self._current_settings, self._current_status, signal_map)
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     ###################### dbus methods ###########################################
@@ -80,4 +85,8 @@ class RomekServer(dbus.service.Object):
 
     @dbus.service.signal(dbus_interface = interface_name, signature = 'u')
     def temperature_change(self, new_temperature):
+        pass
+
+    @dbus.service.signal(dbus_interface = interface_name, signature = 'u')
+    def temperature_status(self, new_temperature):
         pass

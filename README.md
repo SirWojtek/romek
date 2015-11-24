@@ -5,4 +5,5 @@ DBus server for serial communication with ATMega
 - dbus
 - python-dbus
 - pygtk
-- apscheduler
+- apscheduler (pip)
+- pyserial (pip)

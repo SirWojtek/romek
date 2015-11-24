@@ -25,7 +25,7 @@ main_loop_thread.start()
 #################################################################
 
 def init_object(bus):
-    iterations = 10
+    iterations = 100
     sleep_time = 0.1
     for i in range(iterations):
         try:
@@ -103,6 +103,14 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.set_temperature(temp, dbus_interface = self.interface))
         wrapper.wait_for_signal()
         self.assertEqual(wrapper.value, temp)
+
+    def test_get_default_temperature_status(self):
+        default_temp = -1
+        wrapper = SignalWrapper()
+
+        self.obj.connect_to_signal("temperature_status", wrapper.signal_handler)
+        wrapper.wait_for_signal()
+        self.assertEqual(wrapper.value, default_temp)
 
 if __name__ == '__main__':
     unittest.main()

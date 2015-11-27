@@ -17,6 +17,7 @@ class DBusMainLoopThread(threading.Thread):
         gobject.MainLoop().run()
 
 gobject.threads_init()
+dbus.mainloop.glib.threads_init()
 
 main_loop_thread = DBusMainLoopThread()
 main_loop_thread.setDaemon(True)

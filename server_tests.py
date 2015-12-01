@@ -4,6 +4,8 @@ import unittest
 import subprocess
 import threading
 import gobject
+import serial
+import io
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 
@@ -52,15 +54,21 @@ class SignalWrapper:
 
 class TestServerSchedule(unittest.TestCase):
     def setUp(self):
-        self.server = subprocess.Popen(['./server_main.py'])
+        self.server = subprocess.Popen(['./server_main.py', '--test_mode'])
         self.dbus_loop = DBusGMainLoop(set_as_default = True)
         self.bus = dbus.SessionBus(mainloop = self.dbus_loop)
         self.interface = 'org.romek.interface'
         self.obj = init_object(self.bus)
+        ser = serial.serial_for_url('loop://', timeout=1)
+        self.serial_io = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 
         self.task1 = ('M', (12, 0), 'M', (13, 0), 13)
         self.task2 = ('F', (14, 30), 'SA', (6, 15), 21)
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
+
+    def write_serial_message(self, message):
+        self.serial_io.write(unicode(message))
+        self.serial_io.flush()
 
     def tearDown(self):
         self.server.kill()
@@ -105,13 +113,15 @@ class TestServerSchedule(unittest.TestCase):
         wrapper.wait_for_signal()
         self.assertEqual(wrapper.value, temp)
 
-    @unittest.skip('skipping because of lacking feature')
-    def test_get_default_temperature_status(self):
-        default_temp = -1
+    # @unittest.skip('skipping because of lacking feature')
+    def test_get_temperature_status_after_change(self):
+        change_temp = 23
         wrapper = SignalWrapper()
 
         self.obj.connect_to_signal("temperature_status", wrapper.signal_handler)
         wrapper.wait_for_signal()
+        self.serial_io.write(unicode('get_temp %d' % (change_temp)))
+        self.write_serial_message('get_temp %d' % (change_temp))
         self.assertEqual(wrapper.value, default_temp)
 
 if __name__ == '__main__':

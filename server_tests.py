@@ -4,8 +4,7 @@ import unittest
 import subprocess
 import threading
 import gobject
-import serial
-import io
+import socket
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 
@@ -26,6 +25,21 @@ main_loop_thread.setDaemon(True)
 main_loop_thread.start()
 
 #################################################################
+
+sock = None
+test_port = 7777
+
+def setUpModule():
+    global sock
+    global test_port
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(('localhost', test_port))
+    sock.listen(1)
+
+def tearDownModule():
+    global sock
+    sock.close()
 
 def init_object(bus):
     iterations = 100
@@ -53,22 +67,25 @@ class SignalWrapper:
         self.event.wait(self._timeout)
 
 class TestServerSchedule(unittest.TestCase):
+    _test_port = 7777
+
     def setUp(self):
-        self.server = subprocess.Popen(['./server_main.py', '--test_mode'])
+        global test_port
+        global sock
+
+        self.server = subprocess.Popen(['./server_main.py', '--test_mode_port', str(test_port)])
+        self.connection, addr = sock.accept()
         self.dbus_loop = DBusGMainLoop(set_as_default = True)
         self.bus = dbus.SessionBus(mainloop = self.dbus_loop)
         self.interface = 'org.romek.interface'
         self.obj = init_object(self.bus)
-        ser = serial.serial_for_url('loop://', timeout=1)
-        self.serial_io = io.TextIOWrapper(io.BufferedRWPair(ser, ser))
 
         self.task1 = ('M', (12, 0), 'M', (13, 0), 13)
         self.task2 = ('F', (14, 30), 'SA', (6, 15), 21)
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
 
     def write_serial_message(self, message):
-        self.serial_io.write(unicode(message))
-        self.serial_io.flush()
+        self.connection.send(message)
 
     def tearDown(self):
         self.server.kill()
@@ -120,9 +137,8 @@ class TestServerSchedule(unittest.TestCase):
 
         self.obj.connect_to_signal("temperature_status", wrapper.signal_handler)
         wrapper.wait_for_signal()
-        self.serial_io.write(unicode('get_temp %d' % (change_temp)))
-        self.write_serial_message('get_temp %d' % (change_temp))
-        self.assertEqual(wrapper.value, default_temp)
+        self.write_serial_message('temp_change %d' % (change_temp))
+        self.assertEqual(wrapper.value, change_temp)
 
 if __name__ == '__main__':
     unittest.main()

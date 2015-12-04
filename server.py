@@ -25,17 +25,11 @@ class RomekServer(dbus.service.Object):
     task_list_signature = 'a%s' % task_tuple_signature
 
     def __init__(self, bus):
-        signal_map = {
-            'temperature_change' : self.temperature_change,
-            'temperature_status' : self.temperature_status
-        }
-
         self._bus_name = dbus.service.BusName(self.service_name, bus)
         self._current_settings = CurrentSettings()
         self._current_status = CurrentStatus()
         self._scheduler = Scheduler(self._current_settings)
         self._serial_port_manager = SerialPortManager(self._current_settings, self._current_status)
-        self._signal_emitter = SignalEmitter(self._current_settings, self._current_status, signal_map)
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     ###################### dbus methods ###########################################
@@ -67,13 +61,13 @@ class RomekServer(dbus.service.Object):
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
-    def set_temperature(self, temperature):
+    def set_temperature_settings(self, temperature):
         self._current_settings.update_temperature_manual(temperature)
         return True
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
-    def get_temperature(self):
+    def get_temperature_settings(self):
         return self._current_settings.temperature
 
     @dbus.service.method(dbus_interface = interface_name,
@@ -81,12 +75,7 @@ class RomekServer(dbus.service.Object):
     def get_manual_mode(self):
         return self._current_settings.manual_mode
 
-    ####################### dbus signals ########################################
-
-    @dbus.service.signal(dbus_interface = interface_name, signature = 'u')
-    def temperature_change(self, new_temperature):
-        pass
-
-    @dbus.service.signal(dbus_interface = interface_name, signature = 'u')
-    def temperature_status(self, new_temperature):
-        pass
+    @dbus.service.method(dbus_interface = interface_name,
+        in_signature = '', out_signature = 'u')
+    def get_temperature_status(self):
+        return self._current_status.temperature

@@ -43,7 +43,7 @@ def tearDownModule():
 
 def init_object(bus):
     iterations = 100
-    sleep_time = 0.1
+    sleep_time = .1
     for i in range(iterations):
         try:
             return bus.get_object('org.romek.service', '/org/romek/service')
@@ -52,7 +52,7 @@ def init_object(bus):
     raise Exception('Could not get server object')
 
 class SignalWrapper:
-    _timeout = 0.1
+    _timeout = .1
 
     def __init__(self):
         self.value = None
@@ -85,7 +85,7 @@ class TestServerSchedule(unittest.TestCase):
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
 
     def write_serial_message(self, message):
-        self.connection.send(message)
+        self.connection.send(message + '\n')
 
     def tearDown(self):
         self.server.kill()
@@ -136,8 +136,8 @@ class TestServerSchedule(unittest.TestCase):
         wrapper = SignalWrapper()
 
         self.obj.connect_to_signal("temperature_status", wrapper.signal_handler)
-        wrapper.wait_for_signal()
         self.write_serial_message('temp_change %d' % (change_temp))
+        wrapper.wait_for_signal()
         self.assertEqual(wrapper.value, change_temp)
 
 if __name__ == '__main__':

@@ -5,6 +5,8 @@ class SerialPortManager:
         current_settings.register(self.update)
         self._status = status
         self._worker = SerialPortWorker(self.message_received)
+        self._worker.setDaemon(True)
+        self._worker.start()
 
     # settings change callback
     def update(self, settings):
@@ -13,7 +15,7 @@ class SerialPortManager:
 
     # received message callback
     def message_received(self, message):
-        print message
         if message.find('temp_change') != -1:
             a = message.split(' ')
-            self._status.update_temperature(int(a[1]))
+            if (len(a) > 1):
+                self._status.update_temperature(int(a[1]))

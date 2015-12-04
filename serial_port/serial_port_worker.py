@@ -5,13 +5,12 @@ class SerialPortWorker(threading.Thread):
     _timeout = 0.1
 
     def __init__(self, receive_callback):
+        threading.Thread.__init__(self)
         self._serial = serial.Serial(0, timeout = self._timeout)
         self._messages_to_send = []
         self._send_event = threading.Event()
         self._send_lock = threading.Lock()
         self._receive_callback = receive_callback
-
-        threading.Thread.__init__(self)
 
     def add_message(self, message):
         self._send_lock.acquire()
@@ -35,6 +34,6 @@ class SerialPortWorker(threading.Thread):
             self._serial.flush()
 
     def _receive_message(self):
-        message = self.serial.readline()
+        message = self._serial.readline()
         if message:
             self._receive_callback(message)

@@ -10,6 +10,9 @@ parser = argparse.ArgumentParser(description = 'Runs romek d-bus server')
 parser.add_argument('--test_mode_port', '-t', type = int, help = 'Run server in serial port test mode on TCP socket')
 
 def main():
+    gobject.threads_init()
+    dbus.mainloop.glib.threads_init()
+
     dbus_loop = DBusGMainLoop(set_as_default = True)
     bus = dbus.SessionBus(mainloop = dbus_loop)
     romek = server.RomekServer(bus)

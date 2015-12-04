@@ -53,7 +53,9 @@ class TestServerSchedule(unittest.TestCase):
         self.temp = 23
 
     def write_serial_message(self, message):
+        sleep_time = .1
         self.connection.send(message + '\n')
+        sleep(sleep_time)
 
     def tearDown(self):
         self.server.kill()

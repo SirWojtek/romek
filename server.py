@@ -42,40 +42,52 @@ class RomekServer(dbus.service.Object):
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = task_tuple_signature, out_signature = 'b')
     def add_schedule_task(self, task):
+        print 'add_schedule_task: '
+        print task
         return safe_schedule_call(partial(self._scheduler.add_task, task))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = edit_task_signature, out_signature = 'b')
-    def update_schedule_task(self, task):
-        return safe_schedule_call(partial(self._scheduler.update_task, task))
+    def update_schedule_task(self, tasks):
+        print 'update_schedule_task: '
+        print tasks
+        return safe_schedule_call(partial(self._scheduler.update_task, tasks))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = task_tuple_signature, out_signature = 'b')
     def remove_schedule_task(self, task):
+        print 'remove_schedule_task: '
+        print task
         return safe_schedule_call(partial(self._scheduler.remove_task, task))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = task_list_signature)
     def list_schedule_task(self):
+        print 'list_schedule_task'
         return self._scheduler.list_tasks()
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
     def set_temperature_settings(self, temperature):
+        print 'set_temperature_settings: '
+        print temperature
         self._current_settings.update_temperature_manual(temperature)
         return True
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_settings(self):
+        print 'get_temperature_settings'
         return self._current_settings.temperature
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_manual_mode(self):
+        print 'get_manual_mode'
         return self._current_settings.manual_mode
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_status(self):
+        print 'get_temperature_status'
         return self._current_status.temperature

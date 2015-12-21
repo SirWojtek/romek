@@ -3,14 +3,14 @@ from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
 from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
-from signals.signal_emitter import SignalEmitter
+from printer.Printer import Printer
 from functools import partial
 
 def safe_schedule_call(method):
     try:
         method()
     except Exception as e:
-        print e
+        Printer.write(e)
         return False
     return True
 
@@ -42,59 +42,59 @@ class RomekServer(dbus.service.Object):
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = task_tuple_signature, out_signature = 'b')
     def add_schedule_task(self, task):
-        print 'add_schedule_task: '
-        print task
+        Printer.write('add_schedule_task: ')
+        Printer.write(task)
         return safe_schedule_call(partial(self._scheduler.add_task, task))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = edit_task_signature, out_signature = 'b')
     def update_schedule_task(self, tasks):
-        print 'update_schedule_task: '
-        print tasks
+        Printer.write('update_schedule_task: ')
+        Printer.write(tasks)
         return safe_schedule_call(partial(self._scheduler.update_task, tasks))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = task_tuple_signature, out_signature = 'b')
     def remove_schedule_task(self, task):
-        print 'remove_schedule_task: '
-        print task
+        Printer.write('remove_schedule_task: ')
+        Printer.write(task)
         return safe_schedule_call(partial(self._scheduler.remove_task, task))
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = task_list_signature)
     def list_schedule_task(self):
-        print 'list_schedule_task'
+        Printer.write('list_schedule_task')
         return self._scheduler.list_tasks()
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
     def set_temperature_settings(self, temperature):
-        print 'set_temperature_settings: '
-        print temperature
+        Printer.write('set_temperature_settings: ')
+        Printer.write(temperature)
         self._current_settings.update_temperature_manual(temperature)
         return True
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_settings(self):
-        print 'get_temperature_settings'
+        Printer.write('get_temperature_settings')
         return self._current_settings.temperature
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_manual_mode(self):
-        print 'get_manual_mode'
+        Printer.write('get_manual_mode')
         return self._current_settings.manual_mode
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'b', out_signature = 'b')
     def set_manual_mode(self, manual_mode):
-        print 'set_manual_mode'
+        Printer.write('set_manual_mode')
         self._current_settings.manual_mode = manual_mode
         return True
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_status(self):
-        print 'get_temperature_status'
+        Printer.write('get_temperature_status')
         return self._current_status.temperature

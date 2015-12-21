@@ -87,6 +87,13 @@ class RomekServer(dbus.service.Object):
         return self._current_settings.manual_mode
 
     @dbus.service.method(dbus_interface = interface_name,
+        in_signature = 'b', out_signature = 'b')
+    def set_manual_mode(self, manual_mode):
+        print 'set_manual_mode'
+        self._current_settings.manual_mode = manual_mode
+        return True
+
+    @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_status(self):
         print 'get_temperature_status'

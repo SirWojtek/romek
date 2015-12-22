@@ -106,7 +106,10 @@ class TestServerSchedule(unittest.TestCase):
         temps = [ 22, 21, 20, 21, 23, 25 ]
         for temp in temps:
             self.write_serial_temp_change(temp)
-        self.assertEqual(self.obj.get_temperature_history(dbus_interface = self.interface), temps)
+        temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
+        self.assertEqual(len(temps), len(temps_with_timestamp))
+        for i in range(len(temps_with_timestamp)):
+            self.assertEqual(temps_with_timestamp[i][0], temps[i])
 
 if __name__ == '__main__':
     unittest.main()

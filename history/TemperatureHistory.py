@@ -1,4 +1,6 @@
 from collections import deque
+from time import time
+from datetime import datetime
 
 class TemperatureHistory:
     max_results = 100
@@ -11,10 +13,12 @@ class TemperatureHistory:
         self.add(status.temperature)
 
     def add(self, temperature):
-        self._temperature_list.append(temperature)
+        timestamp = datetime.fromtimestamp(time())
+        self._temperature_list.append((temperature, timestamp))
 
     def get_list(self):
-        return list(self._temperature_list)
+        return [ (x, y.year, y.month, y.day, y.hour, y.minute, y.second)
+            for x, y in self._temperature_list ]
 
     def clear(self):
         self._temperature_list.clear()

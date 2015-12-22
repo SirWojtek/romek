@@ -24,7 +24,7 @@ class RomekServer(dbus.service.Object):
     task_tuple_signature = '(%s)' % task_signature
     edit_task_signature = '(%s%s)' % (task_tuple_signature, task_tuple_signature)
     task_list_signature = 'a%s' % task_tuple_signature
-    temperature_history_signature = 'au'
+    temperature_history_signature = 'a(uuuuuuu)'
 
     def __init__(self, bus):
         self._bus_name = dbus.service.BusName(self.service_name, bus)

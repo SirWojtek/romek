@@ -5,7 +5,9 @@ from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
 from history.TemperatureHistory import TemperatureHistory
 from printer.Printer import Printer
+from defaults import defaults
 from functools import partial
+
 
 def safe_schedule_call(method):
     try:
@@ -33,7 +35,13 @@ class RomekServer(dbus.service.Object):
         self._scheduler = Scheduler(self._current_settings)
         self._serial_port_manager = SerialPortManager(self._current_settings, self._current_status)
         self._temp_history = TemperatureHistory(self._current_status)
+        self._set_defaults()
         dbus.service.Object.__init__(self, bus, self.service_object)
+
+    def _set_defaults(self):
+        self._current_settings.update_temperature(defaults['temperature_settings'])
+        self._current_settings.update_manual_mode(defaults['manual_mode'])
+        self._current_status.update_temperature(defaults['temperature_status'])
 
     ###################### dbus methods ###########################################
 

@@ -1,9 +1,9 @@
 import observable
 
 class CurrentSettings(observable.Observable):
-    def __init__(self, temperature = 20, manual_mode = False):
-        self.temperature = temperature
-        self.manual_mode = manual_mode
+    def __init__(self):
+        self.temperature = None
+        self.manual_mode = None
         observable.Observable.__init__(self)
 
     def update_temperature_manual(self, temperature):

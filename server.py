@@ -3,6 +3,7 @@ from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
 from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
+from history.TemperatureHistory import TemperatureHistory
 from printer.Printer import Printer
 from functools import partial
 
@@ -23,6 +24,7 @@ class RomekServer(dbus.service.Object):
     task_tuple_signature = '(%s)' % task_signature
     edit_task_signature = '(%s%s)' % (task_tuple_signature, task_tuple_signature)
     task_list_signature = 'a%s' % task_tuple_signature
+    temperature_history_signature = 'au'
 
     def __init__(self, bus):
         self._bus_name = dbus.service.BusName(self.service_name, bus)
@@ -30,6 +32,7 @@ class RomekServer(dbus.service.Object):
         self._current_status = CurrentStatus()
         self._scheduler = Scheduler(self._current_settings)
         self._serial_port_manager = SerialPortManager(self._current_settings, self._current_status)
+        self._temp_history = TemperatureHistory(self._current_status)
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     ###################### dbus methods ###########################################
@@ -98,3 +101,9 @@ class RomekServer(dbus.service.Object):
     def get_temperature_status(self):
         Printer.write('get_temperature_status')
         return self._current_status.temperature
+
+    @dbus.service.method(dbus_interface = interface_name,
+        in_signature = '', out_signature = temperature_history_signature)
+    def get_temperature_history(self):
+        Printer.write('get_temperature_history')
+        return self._temp_history.get_list()

@@ -78,6 +78,11 @@ class RomekServer(dbus.service.Object):
         return self._scheduler.list_tasks()
 
     @dbus.service.method(dbus_interface = interface_name,
+        in_signature = '', out_signature = 'b')
+    def get_driver_status(self):
+        return True
+
+    @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
     def set_temperature_settings(self, temperature):
         Printer.write('set_temperature_settings: ')

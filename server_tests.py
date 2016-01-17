@@ -40,24 +40,24 @@ class ATMessage:
     Error = 'AT+ERROR'
 
     @staticmethod
-    def irStatus(status):
+    def ir_status(status):
         return 'AT+IR=' + status
 
     @staticmethod
-    def lcdStatus(status):
+    def lcd_status(status):
         return 'AT+LCD_BKT=' + status
 
     @staticmethod
-    def temperatureStatus(temperature):
+    def temperature_status(temperature):
         strTemp = ('%.2f' % temperature).replace('.', ':')
         return 'AT+TEMPERATURE=' + strTemp
 
     @staticmethod
-    def timeStatus(time):
+    def time_status(time):
         return 'AT+TIME=' + time.__str__()
 
     @staticmethod
-    def dateStatus(date):
+    def date_status(date):
         return "AT+DATE=" + date.strftime('%d:%m:%y')
 
 class TestServerSchedule(unittest.TestCase):
@@ -127,7 +127,7 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.get_driver_status(dbus_interface = self.interface))
 
     def test_at_error_message(self):
-        self.write_serial_message(ATMessage.Ok)
+        self.write_serial_message(ATMessage.Error)
         self.assertFalse(self.obj.get_driver_status(dbus_interface = self.interface))
 
     def test_get_temperature_status_after_change(self):

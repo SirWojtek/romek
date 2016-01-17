@@ -3,6 +3,7 @@ from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
 from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
+from serial_port.messages.DriverStatusMessage import DriverStatusMessage
 from history.TemperatureHistory import TemperatureHistory
 from printer.Printer import Printer
 from defaults import defaults
@@ -80,7 +81,7 @@ class RomekServer(dbus.service.Object):
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_driver_status(self):
-        return True
+        return self._serial_port_manager.send_and_receive(DriverStatusMessage())
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')

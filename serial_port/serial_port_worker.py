@@ -30,7 +30,7 @@ class SerialPortWorker(threading.Thread):
     # thread safe must be ensured by caller
     def _send_message(self):
         for message in self._messages_to_send:
-            self._serial.write(message)
+            self._serial.write(message.get())
             self._serial.flush()
 
     def _receive_message(self):

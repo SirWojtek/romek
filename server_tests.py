@@ -5,6 +5,7 @@ import subprocess
 import threading
 import gobject
 import socket
+from datetime import date, time
 from time import sleep
 from dbus.mainloop.glib import DBusGMainLoop
 from defaults import defaults
@@ -33,6 +34,31 @@ def init_object(bus):
         except dbus.DBusException:
             sleep(sleep_time)
     raise Exception('Could not get server object')
+
+class ATMessage:
+    Ok = 'AT+OK'
+    Error = 'AT+ERROR'
+
+    @static_method
+    def irStatus(status):
+        return 'AT+IR=' + status
+
+    @static_method
+    def lcdStatus(status):
+        return 'AT+LCD_BKT=' + status
+
+    @static_method
+    def temperatureStatus(temperature):
+        strTemp = ('%.2f' % temperature).replace('.', ':')
+        return 'AT+TEMPERATURE=' + strTemp
+
+    @static_method
+    def timeStatus(time):
+        return 'AT+TIME=' + time.__str__()
+    
+    @static_method
+    def dateStatus(date):
+        return "AT+DATE=" + date.strftime('%d:%m:%y')
 
 class TestServerSchedule(unittest.TestCase):
     _test_port = 7777
@@ -94,6 +120,14 @@ class TestServerSchedule(unittest.TestCase):
         self.assertFalse(self.obj.get_manual_mode(dbus_interface = self.interface))
         self.assertTrue(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
+
+    def test_at_ok_message(self):
+        self.write_serial_message(ATMessage.Ok)
+        self.assertTrue(self.obj.get_driver_status(dbus_interface = self.interface))
+
+    def test_at_error_message(self):
+        self.write_serial_message(ATMessage.Ok)
+        self.assertFalse(self.obj.get_driver_status(dbus_interface = self.interface))
 
     def test_get_temperature_status_after_change(self):
         # TODO: replace when AT message interface will be ready

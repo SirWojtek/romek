@@ -55,7 +55,7 @@ class ATMessage:
     @static_method
     def timeStatus(time):
         return 'AT+TIME=' + time.__str__()
-    
+ 
     @static_method
     def dateStatus(date):
         return "AT+DATE=" + date.strftime('%d:%m:%y')

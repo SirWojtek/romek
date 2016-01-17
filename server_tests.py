@@ -39,24 +39,24 @@ class ATMessage:
     Ok = 'AT+OK'
     Error = 'AT+ERROR'
 
-    @static_method
+    @staticmethod
     def irStatus(status):
         return 'AT+IR=' + status
 
-    @static_method
+    @staticmethod
     def lcdStatus(status):
         return 'AT+LCD_BKT=' + status
 
-    @static_method
+    @staticmethod
     def temperatureStatus(temperature):
         strTemp = ('%.2f' % temperature).replace('.', ':')
         return 'AT+TEMPERATURE=' + strTemp
 
-    @static_method
+    @staticmethod
     def timeStatus(time):
         return 'AT+TIME=' + time.__str__()
- 
-    @static_method
+
+    @staticmethod
     def dateStatus(date):
         return "AT+DATE=" + date.strftime('%d:%m:%y')
 
@@ -90,6 +90,7 @@ class TestServerSchedule(unittest.TestCase):
     def tearDown(self):
         self.server.kill()
         self.server.communicate()
+        self.connection.shutdown(socket.SHUT_RDWR)
 
     def test_add_multiple_tasks(self):
         self.assertTrue(self.obj.add_schedule_task(self.task1, dbus_interface = self.interface))

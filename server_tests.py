@@ -36,8 +36,10 @@ def init_object(bus):
     raise Exception('Could not get server object')
 
 class ATMessage:
+    StatusQuery = 'AT'
     Ok = 'AT+OK'
     Error = 'AT+ERROR'
+    TemperatureQuery = 'AT+TEMPERATURE?'
 
     @staticmethod
     def ir_status(status):
@@ -60,6 +62,21 @@ class ATMessage:
     def date_status(date):
         return "AT+DATE=" + date.strftime('%d:%m:%y')
 
+class SocketCommunitator(threading.Thread):
+    def __init__(self, connection, to_receive, to_send):
+        self._connection = connection
+        self._to_receive = to_receive
+        self._to_send = to_send
+        self.result = False
+        threading.Thread.__init__(self)
+        self.start()
+
+    def run(self):
+        received = self._connection.recv(128)
+        self._connection.send(self._to_send + '\n')
+        sleep(.1)
+        self.result = received == self._to_receive
+
 class TestServerSchedule(unittest.TestCase):
     _test_port = 7777
 
@@ -78,14 +95,7 @@ class TestServerSchedule(unittest.TestCase):
         self.task3 = ('SU', (9, 30), 'TU', (9, 30), 28)
 
         self.temp = 23
-
-    def write_serial_message(self, message):
-        sleep_time = .1
-        self.connection.send(message + '\n')
-        sleep(sleep_time)
-
-    def write_serial_temp_change(self, new_temp):
-        self.write_serial_message('temp_change %d' % (new_temp))
+        self.communicator_timeout = .5
 
     def tearDown(self):
         self.server.kill()
@@ -123,17 +133,23 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
 
     def test_at_ok_message(self):
-        self.write_serial_message(ATMessage.Ok)
+        com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Ok)
         self.assertTrue(self.obj.get_driver_status(dbus_interface = self.interface))
+        com.join(self.communicator_timeout)
+        self.assertTrue(com.result)
 
     def test_at_error_message(self):
-        self.write_serial_message(ATMessage.Error)
+        com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Error)
         self.assertFalse(self.obj.get_driver_status(dbus_interface = self.interface))
+        com.join(self.communicator_timeout)
+        self.assertTrue(com.result)
 
     def test_get_temperature_status_after_change(self):
-        # TODO: replace when AT message interface will be ready
-        self.write_serial_temp_change(self.temp)
+        com = SocketCommunitator(self.connection, ATMessage.TemperatureQuery,
+            ATMessage.temperature_status(self.temp))
         self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), self.temp)
+        com.join(self.communicator_timeout)
+        self.assertTrue(com.result)
 
     def test_get_temperature_history(self):
         history = self.obj.get_temperature_history(dbus_interface = self.interface)
@@ -143,9 +159,11 @@ class TestServerSchedule(unittest.TestCase):
     def test_get_temperature_history_after_change(self):
         temps = [ 22, 21, 20, 21, 23, 25 ]
         for temp in temps:
-            self.write_serial_temp_change(temp)
+            con = SocketCommunitator(self.connection, ATMessage.TemperatureQuery,
+                    ATMessage.temperature_status(temp))
+            self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), temp)
+            con.join(self.communicator_timeout)
         temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
-        # because of default value at begining of history
         for i in range(1, len(temps_with_timestamp)):
             self.assertEqual(temps_with_timestamp[i][0], temps[i - 1])
 

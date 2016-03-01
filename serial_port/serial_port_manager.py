@@ -23,13 +23,7 @@ class SerialPortManager:
 
     # received message callback
     def message_received(self, message):
-        # TODO: remove 'temp_change' implementation
-        if message.find('temp_change') != -1:
-            a = message.split(' ')
-            if (len(a) > 1):
-                self._status.update_temperature(int(a[1]))
-        else:
-            self._write_answer(message)
+        self._write_answer(message)
 
     def _write_answer(self, message):
         self._answer = message.replace('\n', '')

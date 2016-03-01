@@ -146,7 +146,6 @@ class TestServerSchedule(unittest.TestCase):
             self.write_serial_temp_change(temp)
         temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
         # because of default value at begining of history
-        self.assertEqual(len(temps) + 1, len(temps_with_timestamp))
         for i in range(1, len(temps_with_timestamp)):
             self.assertEqual(temps_with_timestamp[i][0], temps[i - 1])
 

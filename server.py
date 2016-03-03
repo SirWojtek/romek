@@ -115,7 +115,10 @@ class RomekServer(dbus.service.Object):
         in_signature = '', out_signature = 'u')
     def get_temperature_status(self):
         Printer.write('get_temperature_status')
-        return self._serial_port_manager.send_and_receive(DriverTemperatureMessage())
+        temp_status = self._serial_port_manager.send_and_receive(
+            DriverTemperatureMessage())
+        self._temp_history.add(temp_status)
+        return temp_status
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = temperature_history_signature)

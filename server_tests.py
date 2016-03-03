@@ -164,6 +164,7 @@ class TestServerSchedule(unittest.TestCase):
             self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), temp)
             con.join(self.communicator_timeout)
         temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
+        self.assertEqual(len(temps_with_timestamp), len(temps) + 1)
         for i in range(1, len(temps_with_timestamp)):
             self.assertEqual(temps_with_timestamp[i][0], temps[i - 1])
 

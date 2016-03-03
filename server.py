@@ -3,8 +3,8 @@ from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
 from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
-from serial_port.messages.DriverStatusMessage import DriverStatusMessage
-from serial_port.messages.DriverTemperatureMessage import DriverTemperatureMessage
+from serial_port.messages.StatusMessage import StatusMessage
+from serial_port.messages.TemperatureMessages import TemperatureGetMessage
 from history.TemperatureHistory import TemperatureHistory
 from printer.Printer import Printer
 from defaults import defaults
@@ -41,9 +41,9 @@ class RomekServer(dbus.service.Object):
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     def _set_defaults(self):
-        self._current_settings.update_temperature(defaults['temperature_settings'])
-        self._current_settings.update_manual_mode(defaults['manual_mode'])
-        self._current_status.update_temperature(defaults['temperature_status'])
+        self._current_settings.temperature = defaults['temperature_settings']
+        self._current_settings.manual_mode = defaults['manual_mode']
+        self._current_status.temperature = defaults['temperature_status']
 
     ###################### dbus methods ###########################################
 
@@ -82,7 +82,7 @@ class RomekServer(dbus.service.Object):
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_driver_status(self):
-        return self._serial_port_manager.send_and_receive(DriverStatusMessage())
+        return self._serial_port_manager.send_and_receive(StatusMessage())
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
@@ -116,7 +116,7 @@ class RomekServer(dbus.service.Object):
     def get_temperature_status(self):
         Printer.write('get_temperature_status')
         temp_status = self._serial_port_manager.send_and_receive(
-            DriverTemperatureMessage())
+            TemperatureGetMessage())
         self._temp_history.add(temp_status)
         return temp_status
 

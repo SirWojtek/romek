@@ -77,6 +77,10 @@ class SocketCommunitator(threading.Thread):
         sleep(.1)
         self.result = received == self._to_receive
 
+    def join(self):
+        join_timeout = .5
+        threading.Thread.join(self, join_timeout)
+
 class TestServerSchedule(unittest.TestCase):
     _test_port = 7777
 
@@ -119,36 +123,51 @@ class TestServerSchedule(unittest.TestCase):
         self.assertTrue(self.obj.update_schedule_task((self.task1, self.task3), dbus_interface = self.interface))
         self.assertListEqual(self.obj.list_schedule_task(), [ self.task3, self.task2 ])
 
-    def test_set_and_get_temperature_settings(self):
+    def test_set_and_get_temperature_settings_ok(self):
+        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
+            ATMessage.Ok)
         self.assertTrue(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertEqual(self.obj.get_temperature_settings(dbus_interface = self.interface), self.temp)
+        com.join()
+        self.assertTrue(com.result)
+
+    def test_set_and_get_temperature_settings_nok(self):
+        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
+            ATMessage.Error)
+        self.assertFalse(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
+        self.assertNotEqual(self.obj.get_temperature_settings(dbus_interface = self.interface), self.temp)
+        com.join()
+        self.assertTrue(com.result)
 
     def test_set_and_get_manual_mode(self):
         self.assertTrue(self.obj.set_manual_mode(True, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
 
     def test_set_temperature_settings_and_get_manual_mode(self):
+        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
+            ATMessage.Ok)
         self.assertFalse(self.obj.get_manual_mode(dbus_interface = self.interface))
         self.assertTrue(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
+        com.join()
 
     def test_at_ok_message(self):
         com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Ok)
         self.assertTrue(self.obj.get_driver_status(dbus_interface = self.interface))
-        com.join(self.communicator_timeout)
+        com.join()
         self.assertTrue(com.result)
 
     def test_at_error_message(self):
         com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Error)
         self.assertFalse(self.obj.get_driver_status(dbus_interface = self.interface))
-        com.join(self.communicator_timeout)
+        com.join()
         self.assertTrue(com.result)
 
     def test_get_temperature_status_after_change(self):
         com = SocketCommunitator(self.connection, ATMessage.TemperatureQuery,
             ATMessage.temperature_status(self.temp))
         self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), self.temp)
-        com.join(self.communicator_timeout)
+        com.join()
         self.assertTrue(com.result)
 
     def test_get_temperature_history(self):
@@ -162,11 +181,11 @@ class TestServerSchedule(unittest.TestCase):
             con = SocketCommunitator(self.connection, ATMessage.TemperatureQuery,
                     ATMessage.temperature_status(temp))
             self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), temp)
-            con.join(self.communicator_timeout)
+            con.join()
         temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
-        self.assertEqual(len(temps_with_timestamp), len(temps) + 1)
-        for i in range(1, len(temps_with_timestamp)):
-            self.assertEqual(temps_with_timestamp[i][0], temps[i - 1])
+        self.assertEqual(len(temps_with_timestamp), len(temps))
+        for i in range(len(temps_with_timestamp)):
+            self.assertEqual(temps_with_timestamp[i][0], temps[i])
 
 if __name__ == '__main__':
     unittest.main()

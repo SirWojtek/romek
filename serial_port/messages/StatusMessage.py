@@ -1,6 +1,6 @@
 from ATMessage import ATMessage
 
-class DriverStatusMessage(ATMessage):
+class StatusMessage(ATMessage):
     def get(self):
         return 'AT'
 

@@ -1,4 +1,5 @@
 from serial_port_worker import SerialPortWorker
+from messages.TemperatureMessages import TemperatureSetMessage
 import threading
 
 class SerialPortManager:
@@ -13,8 +14,9 @@ class SerialPortManager:
 
     # settings change callback
     def update(self, settings):
-        # TODO: write serial port send implementation
-        pass
+        print 'aaa'
+        self.send_and_receive(TemperatureSetMessage(settings.temperature))
+        print 'bbb'
 
     def send_and_receive(self, message):
         self._worker.add_message(message)

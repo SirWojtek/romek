@@ -67,17 +67,16 @@ class SocketCommunitator(threading.Thread):
         self._connection = connection
         self._to_receive = to_receive
         self._to_send = to_send
-        self.result = False
+        self.received = None
         threading.Thread.__init__(self)
         self.start()
 
     def run(self):
-        received = self._connection.recv(128)
+        self.received = self._connection.recv(128)
         # print (received, self._to_receive)
         self._connection.send(self._to_send + '\n')
         # print self._to_send
         sleep(.1)
-        self.result = received == self._to_receive
 
     def join(self):
         join_timeout = .5
@@ -103,6 +102,8 @@ class TestServerSchedule(unittest.TestCase):
         self.temp = 23
         self.communicator_timeout = .5
 
+        self.temp_message = ATMessage.temperature_status(self.temp)
+
     def tearDown(self):
         self.server.kill()
         self.server.communicate()
@@ -126,51 +127,50 @@ class TestServerSchedule(unittest.TestCase):
         self.assertListEqual(self.obj.list_schedule_task(), [ self.task3, self.task2 ])
 
     def test_set_and_get_temperature_settings_ok(self):
-        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
-            ATMessage.Ok)
+        com = SocketCommunitator(self.connection, self.temp_message, ATMessage.Ok)
         self.assertTrue(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertEqual(self.obj.get_temperature_settings(dbus_interface = self.interface), self.temp)
         com.join()
-        self.assertTrue(com.result)
+        self.assertEqual(com.received, self.temp_message)
 
     def test_set_and_get_temperature_settings_nok(self):
-        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
+        com = SocketCommunitator(self.connection, self.temp_message,
             ATMessage.Error)
         self.assertFalse(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertNotEqual(self.obj.get_temperature_settings(dbus_interface = self.interface), self.temp)
         com.join()
-        self.assertTrue(com.result)
+        self.assertEqual(com.received, self.temp_message)
 
     def test_set_and_get_manual_mode(self):
         self.assertTrue(self.obj.set_manual_mode(True, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
 
     def test_set_temperature_settings_and_get_manual_mode(self):
-        com = SocketCommunitator(self.connection, ATMessage.temperature_status(self.temp),
-            ATMessage.Ok)
+        com = SocketCommunitator(self.connection, self.temp_message, ATMessage.Ok)
         self.assertFalse(self.obj.get_manual_mode(dbus_interface = self.interface))
         self.assertTrue(self.obj.set_temperature_settings(self.temp, dbus_interface = self.interface))
         self.assertTrue(self.obj.get_manual_mode(dbus_interface = self.interface))
         com.join()
+        self.assertEqual(com.received, self.temp_message)
 
     def test_at_ok_message(self):
         com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Ok)
         self.assertTrue(self.obj.get_driver_status(dbus_interface = self.interface))
         com.join()
-        self.assertTrue(com.result)
+        self.assertEqual(com.received, ATMessage.StatusQuery)
 
     def test_at_error_message(self):
         com = SocketCommunitator(self.connection, ATMessage.StatusQuery, ATMessage.Error)
         self.assertFalse(self.obj.get_driver_status(dbus_interface = self.interface))
         com.join()
-        self.assertTrue(com.result)
+        self.assertEqual(com.received, ATMessage.StatusQuery)
 
     def test_get_temperature_status_after_change(self):
         com = SocketCommunitator(self.connection, ATMessage.TemperatureQuery,
             ATMessage.temperature_status(self.temp))
         self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), self.temp)
         com.join()
-        self.assertTrue(com.result)
+        self.assertEqual(com.received, ATMessage.TemperatureQuery)
 
     def test_get_temperature_history_after_change(self):
         temps = [ 22, 21, 20, 21, 23, 25 ]
@@ -179,6 +179,7 @@ class TestServerSchedule(unittest.TestCase):
                     ATMessage.temperature_status(temp))
             self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), temp)
             con.join()
+            self.assertEqual(con.received, ATMessage.TemperatureQuery)
         temps_with_timestamp = self.obj.get_temperature_history(dbus_interface = self.interface)
         self.assertEqual(len(temps_with_timestamp), len(temps))
         for i in range(len(temps_with_timestamp)):

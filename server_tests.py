@@ -76,7 +76,7 @@ class SocketCommunitator(threading.Thread):
         # print (received, self._to_receive)
         self._connection.send(self._to_send + '\n')
         # print self._to_send
-        sleep(.1)
+        # sleep(.1)  # performance reasons
 
     def join(self):
         join_timeout = .5

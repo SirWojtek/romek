@@ -185,5 +185,7 @@ class TestServerSchedule(unittest.TestCase):
         for i in range(len(temps_with_timestamp)):
             self.assertEqual(temps_with_timestamp[i][0], temps[i])
 
+    # TODO: write async serial message send test
+
 if __name__ == '__main__':
     unittest.main()

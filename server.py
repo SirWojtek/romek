@@ -3,6 +3,7 @@ from schedule.scheduler import Scheduler
 from settings.current_settings import CurrentSettings
 from settings.current_status import CurrentStatus
 from serial_port.serial_port_manager import SerialPortManager
+from serial_port.messages.ATMessage import ATErrorException
 from serial_port.messages.StatusMessage import StatusMessage
 from serial_port.messages.TemperatureMessages import TemperatureGetMessage
 from history.TemperatureHistory import TemperatureHistory
@@ -35,14 +36,15 @@ class RomekServer(dbus.service.Object):
         self._current_settings = CurrentSettings()
         self._current_status = CurrentStatus()
         self._scheduler = Scheduler(self._current_settings)
-        self._serial_port_manager = SerialPortManager(self._current_settings, self._current_status)
+        self._serial_port_manager = SerialPortManager(
+            self._current_settings.temperature, self._current_status)
         self._temp_history = TemperatureHistory(self._current_status)
         self._set_defaults()
         dbus.service.Object.__init__(self, bus, self.service_object)
 
     def _set_defaults(self):
-        self._current_settings.temperature = defaults['temperature_settings']
-        self._current_settings.manual_mode = defaults['manual_mode']
+        self._current_settings.temperature.value = defaults['temperature_settings']
+        self._current_settings.manual_mode.value = defaults['manual_mode']
         self._current_status.temperature = defaults['temperature_status']
 
     ###################### dbus methods ###########################################
@@ -82,33 +84,42 @@ class RomekServer(dbus.service.Object):
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_driver_status(self):
-        return self._serial_port_manager.send_and_receive(StatusMessage())
+        try:
+            self._serial_port_manager.send_and_receive(StatusMessage())
+            return True
+        except ATErrorException:
+            Printer.write('Received AT+ERROR')
+            return False
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'u', out_signature = 'b')
     def set_temperature_settings(self, temperature):
         Printer.write('set_temperature_settings: ')
         Printer.write(temperature)
-        self._current_settings.update_temperature_manual(temperature)
-        return True
+        try:
+            self._current_settings.temperature.update_temperature_manual(temperature)
+            return True
+        except ATErrorException:
+            Printer.write('Received AT+ERROR')
+            return False
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'u')
     def get_temperature_settings(self):
         Printer.write('get_temperature_settings')
-        return self._current_settings.temperature
+        return self._current_settings.temperature.value
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = '', out_signature = 'b')
     def get_manual_mode(self):
         Printer.write('get_manual_mode')
-        return self._current_settings.manual_mode
+        return self._current_settings.manual_mode.value
 
     @dbus.service.method(dbus_interface = interface_name,
         in_signature = 'b', out_signature = 'b')
     def set_manual_mode(self, manual_mode):
         Printer.write('set_manual_mode')
-        self._current_settings.manual_mode = manual_mode
+        self._current_settings.manual_mode.update(manual_mode)
         return True
 
     @dbus.service.method(dbus_interface = interface_name,
@@ -117,7 +128,7 @@ class RomekServer(dbus.service.Object):
         Printer.write('get_temperature_status')
         temp_status = self._serial_port_manager.send_and_receive(
             TemperatureGetMessage())
-        self._temp_history.add(temp_status)
+        self._current_status.update(temp_status)
         return temp_status
 
     @dbus.service.method(dbus_interface = interface_name,

@@ -9,8 +9,8 @@ class TemperatureHistory:
         self._temperature_list = deque(maxlen = TemperatureHistory.max_results)
         current_status.register(self.update_notification)
 
-    def update_notification(self, status):
-        self.add(status.temperature)
+    def update_notification(self, temperature):
+        self.add(temperature)
 
     def add(self, temperature):
         timestamp = datetime.fromtimestamp(time())

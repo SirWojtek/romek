@@ -1,4 +1,7 @@
 
+class ATErrorException(Exception):
+    pass
+
 class ATMessage:
     ok = 'AT+OK'
     error = 'AT+ERROR'
@@ -10,7 +13,7 @@ class ATMessage:
         if message == ATMessage.ok:
             return True
         elif message == ATMessage.error:
-            return False
+            raise ATErrorException()
         raise Exception('Reveived incorrect message')
 
     def isAnswer(self, message):

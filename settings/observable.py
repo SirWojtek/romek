@@ -1,6 +1,7 @@
 
 class Observable:
     def __init__(self):
+        self.value = None
         self.observers = []
 
     def register(self, func):
@@ -15,13 +16,11 @@ class Observable:
         if self.observers:
             del self.observers[:]
 
-    def update_notification(self):
+    def update(self, value):
+        self.update_notification(value)
+        self.value = value
+
+    def update_notification(self, new_value):
         for observer in self.observers:
-            observer(self)
+            observer(new_value)
 
-
-def update_decorator(func):
-    def func_wrapper(self, value):
-        func(self, value)
-        self.update_notification()
-    return func_wrapper

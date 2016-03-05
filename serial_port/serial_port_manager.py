@@ -3,8 +3,8 @@ from messages.TemperatureMessages import TemperatureSetMessage
 import threading
 
 class SerialPortManager:
-    def __init__(self, current_settings, status):
-        current_settings.register(self.update)
+    def __init__(self, temperature_setting, status):
+        temperature_setting.register(self.update_temperature)
         self._status = status
         self._worker = SerialPortWorker(self.message_received)
         self._worker.setDaemon(True)
@@ -13,10 +13,8 @@ class SerialPortManager:
         self._answer = ''
 
     # settings change callback
-    def update(self, settings):
-        print 'aaa'
-        self.send_and_receive(TemperatureSetMessage(settings.temperature))
-        print 'bbb'
+    def update_temperature(self, temperature):
+        self.send_and_receive(TemperatureSetMessage(temperature))
 
     def send_and_receive(self, message):
         self._worker.add_message(message)

@@ -51,7 +51,7 @@ class ATMessage:
 
     @staticmethod
     def temperature_status(temperature):
-        strTemp = ('%.2f' % temperature).replace('.', ':')
+        strTemp = ('%.1f' % temperature).replace('.', ':')
         return 'AT+TEMPERATURE=' + strTemp
 
     @staticmethod
@@ -73,7 +73,9 @@ class SocketCommunitator(threading.Thread):
 
     def run(self):
         received = self._connection.recv(128)
+        # print (received, self._to_receive)
         self._connection.send(self._to_send + '\n')
+        # print self._to_send
         sleep(.1)
         self.result = received == self._to_receive
 
@@ -169,11 +171,6 @@ class TestServerSchedule(unittest.TestCase):
         self.assertEqual(self.obj.get_temperature_status(dbus_interface = self.interface), self.temp)
         com.join()
         self.assertTrue(com.result)
-
-    def test_get_temperature_history(self):
-        history = self.obj.get_temperature_history(dbus_interface = self.interface)
-        self.assertEqual(len(history), 1)
-        self.assertEqual(history[0][0], defaults['temperature_status'])
 
     def test_get_temperature_history_after_change(self):
         temps = [ 22, 21, 20, 21, 23, 25 ]

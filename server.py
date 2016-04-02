@@ -11,7 +11,6 @@ from printer.Printer import Printer
 from defaults import defaults
 from functools import partial
 
-
 def safe_schedule_call(method):
     try:
         method()

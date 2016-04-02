@@ -18,6 +18,7 @@ def setUpModule():
     global test_port
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(('localhost', test_port))
     sock.listen(1)
 
@@ -62,6 +63,10 @@ class ATMessage:
     def date_status(date):
         return "AT+DATE=" + date.strftime('%d:%m:%y')
 
+    @staticmethod
+    def log(message):
+        return "LOG_" + message
+
 class SocketCommunitator(threading.Thread):
     def __init__(self, connection, to_receive, to_send):
         self._connection = connection
@@ -89,7 +94,7 @@ class TestServerSchedule(unittest.TestCase):
         global test_port
         global sock
 
-        self.server = subprocess.Popen(['./server_main.py', '--test_mode_port', str(test_port)])
+        self.server = subprocess.Popen(['./server_main.py' ,'--test_mode_port', str(test_port)])
         self.connection, addr = sock.accept()
         self.bus = dbus.SessionBus()
         self.interface = 'org.romek.interface'
@@ -107,7 +112,7 @@ class TestServerSchedule(unittest.TestCase):
     def tearDown(self):
         self.server.kill()
         self.server.communicate()
-        self.connection.shutdown(socket.SHUT_RDWR)
+        self.connection.close()
 
     def test_add_multiple_tasks(self):
         self.assertTrue(self.obj.add_schedule_task(self.task1, dbus_interface = self.interface))
@@ -184,6 +189,11 @@ class TestServerSchedule(unittest.TestCase):
         self.assertEqual(len(temps_with_timestamp), len(temps))
         for i in range(len(temps_with_timestamp)):
             self.assertEqual(temps_with_timestamp[i][0], temps[i])
+
+    def test_async_log_message_receive(self):
+        # received log message can not be checked here
+        self.connection.send(ATMessage.log("test") + '\n')
+        self.test_get_temperature_status_after_change()
 
     # TODO: write async serial message send test
 
